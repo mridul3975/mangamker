@@ -1,0 +1,140 @@
+:root {
+  --bg: #f3efe7;
+  --panel: #fffdf8;
+  --ink: #1f2522;
+  --muted: #55605a;
+  --line: #d7cfc2;
+  --accent: #0f766e;
+  --accent-2: #ca8a04;
+  --danger: #b42318;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 15% 10%, rgba(15, 118, 110, 0.2), transparent 45%),
+    radial-gradient(circle at 85% 90%, rgba(202, 138, 4, 0.2), transparent 35%),
+    var(--bg);
+}
+
+#root {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 16px 40px;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.headline h1 {
+  margin: 0 0 6px;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+}
+
+.headline p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
+}
+
+.card h2 {
+  margin-top: 0;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+
+input,
+textarea,
+select,
+button {
+  font: inherit;
+}
+
+input,
+textarea,
+select {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  background: #fff;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent), #0b5f59);
+  color: #fff;
+}
+
+button[disabled] {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  align-items: flex-start;
+}
+
+.tag {
+  margin: 0;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.error {
+  color: var(--danger);
+  margin: 0;
+}
+
+.preview {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
