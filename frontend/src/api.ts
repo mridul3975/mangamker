@@ -28,6 +28,21 @@ export async function createCharacter(payload: {
     return parseJson<CharacterProfile>(res);
 }
 
+// Update an existing character by ID
+export async function updateCharacter(id: string, payload: {
+    name: string;
+    role: 'mc' | 'fmc' | 'side';
+    rawTraits: string;
+}): Promise<CharacterProfile> {
+    const res = await fetch(`${API_BASE}/api/characters/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    return parseJson<CharacterProfile>(res);
+}
+
+
 export async function refineCharacter(id: string): Promise<{ id: string; refinedTraits: string; updatedAt: string }> {
     const res = await fetch(`${API_BASE}/api/characters/${id}/refine`, {
         method: 'POST',

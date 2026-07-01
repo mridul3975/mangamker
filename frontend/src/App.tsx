@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useCharacterVaultStore, usePanelGeneratorStore } from './store'
+import { useCharacterVaultStore, usePanelGeneratorStore } from './store';
+import { updateCharacter } from './api';
 import './App.css'
 
 function App() {

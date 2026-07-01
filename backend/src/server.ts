@@ -57,6 +57,41 @@ app.get('/api/characters', (_req, res) => {
     );
 });
 
+app.put('/api/characters/:id', async (req, res) => {
+    const { id } = req.params;
+    const parsed = characterSchema.safeParse(req.body);
+    if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.flatten() });
+    }
+
+    const row = db.prepare('SELECT id FROM characters WHERE id = ?').get(id) as { id: string } | undefined;
+    if (!row) {
+        return res.status(404).json({ error: 'Character not found' });
+    }
+
+    const now = new Date().toISOString();
+    const refinedTraits = refineCharacterTraits(parsed.data.rawTraits);
+    db.prepare(
+        `UPDATE characters SET name = ?, role = ?, raw_traits = ?, refined_traits = ?, updated_at = ? WHERE id = ?`
+    ).run(
+        parsed.data.name.toLowerCase(),
+        parsed.data.role,
+        parsed.data.rawTraits,
+        refinedTraits,
+        now,
+        id
+    );
+
+    return res.json({
+        id,
+        name: parsed.data.name.toLowerCase(),
+        role: parsed.data.role,
+        rawTraits: parsed.data.rawTraits,
+        refinedTraits,
+        updatedAt: now,
+    });
+});
+
 app.post('/api/characters', (req, res) => {
     const parsed = characterSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -159,7 +194,6 @@ app.get('/api/jobs/:jobId', (req, res) => {
         },
     });
 });
-
 
 const port = Number(process.env.PORT || 4000);
 app.listen(port, () => {

@@ -2,7 +2,7 @@
   "name": "mangamaker-workspace",
   "private": true,
   "scripts": {
-    "dev": "npm run dev --prefix frontend",
-    "backend": "npm run dev --prefix backend"
+    "dev": "cd frontend && bun run dev",
+    "backend": "cd backend && bun run dev"
   }
 }
