@@ -4,7 +4,8 @@ import express from 'express';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { db, initDb } from './db.js';
-import { createGenerationJob, processJob } from './services/jobs.js';
+// Google Generative AI SDK – replaces Segmind workflow
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { refineCharacterTraits } from './services/refine.js';
 
 initDb();
@@ -136,17 +137,65 @@ app.post('/api/characters/:id/refine', (req, res) => {
     return res.json({ id: row.id, refinedTraits, updatedAt });
 });
 
-app.post('/api/panels/generate', (req, res) => {
-    const parsed = storySchema.safeParse(req.body);
-    if (!parsed.success) {
-        return res.status(400).json({ error: parsed.error.flatten() });
+app.post('/api/panels/generate', async (req, res) => {
+  const parsed = storySchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.flatten() });
+  }
+
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+    // Stage 1: Refine the raw story into a detailed visual prompt
+    const geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const geminiResp = await geminiModel.generateContent({
+      contents: [{ role: 'user', parts: [{ text: parsed.data.rawStoryInput }] }],
+    });
+    const refinedPrompt = geminiResp.response.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    if (!refinedPrompt) {
+      throw new Error('Gemini did not return a refined prompt');
     }
 
-    const { jobId, panelId } = createGenerationJob(parsed.data.rawStoryInput);
-    processJob(jobId);
+    // Stage 2: Generate the image from the refined prompt using Pollinations API
+    const pollinationsApiKey = process.env.POLLINATIONS_API_KEY;
+    if (!pollinationsApiKey) {
+      throw new Error('POLLINATIONS_API_KEY is not set in environment variables');
+    }
 
-    return res.status(202).json({ jobId, panelId });
+    const pollinationsResponse = await fetch('https://gen.pollinations.ai/v1/images/generations', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${pollinationsApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt: refinedPrompt,
+        model: 'gptimage',
+        response_format: 'b64_json',
+      }),
+    });
+
+    if (!pollinationsResponse.ok) {
+      const errorText = await pollinationsResponse.text();
+      throw new Error(`Pollinations API error: ${pollinationsResponse.status} ${errorText}`);
+    }
+
+    const pollinationsData = (await pollinationsResponse.json()) as {
+      data: Array<{ b64_json: string }>;
+    };
+
+    const imageBase64 = pollinationsData.data?.[0]?.b64_json;
+    if (!imageBase64) {
+      throw new Error('Pollinations API failed to return base64 image data');
+    }
+
+    return res.status(200).json({ imageBase64 });
+  } catch (err) {
+    console.error('Panel generation error:', err);
+    return res.status(500).json({ error: (err as Error).message });
+  }
 });
+
 
 app.get('/api/jobs/:jobId', (req, res) => {
     const row = db

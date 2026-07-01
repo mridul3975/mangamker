@@ -4,5 +4,8 @@
   "scripts": {
     "dev": "cd frontend && bun run dev",
     "backend": "cd backend && bun run dev"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1"
   }
 }
